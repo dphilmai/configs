@@ -1,86 +1,57 @@
-syntax enable 						" turns syntax highlighting on
-colorscheme jellybeans              " defines the color scheme of syntax highlighting
-filetype plugin indent on
+if empty(glob('~/.vim/autoload/plug.vim'))
+  silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs
+    \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+  autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
+endif
 
-set ruler                           "(ru) show the cursor position at all times
-set showcmd                         "(sc) display an incomplete command in the lower right
-set history=50                      "(hi) keep 50 lines of command history
-set number relativenumber           "(nu) and relativenumber for hybrid style mode
-set showmatch                       "(sm) briefly jumpt to matching bracket when one is inserted
-set autoindent                      "(ai) turn on auto-indenting
-set copyindent                      "(ci) when auto-indenting, use indenting format of prev. line
-set textwidth=100					"(tw) number of columns before an automatic line break is
-                                    "     inserted
-set colorcolumn=100					"(cc) highligth the specficied column with color
-"set formatoptions=croq             "(fo) influences how vim automatically formats text --> !TODO!
-set backspace=indent,eol,start      "(bs) allows backspacing beyond starting point of insert mode,
-                                    "     indents and line breaks
-set winminheight=0                  "(wmh) the minimal height of the window when not the current
-                                    "       one
-set linebreak                       "(lbr) wrap long lines at a space instead of the middle of a
-                                    "      word
-set wrapscan                        "(ws) search continues at the top of the document when bottom
-                                    "     hit
-set incsearch                       "(is) highlighting while typed what is searched
-"set ignorecase                     "(ic) ignore case in search patterns
-"set smartcase                      "(scs) Does not ignore case when search term includes UPPER
-set lazyredraw						" Do not redraw screen when running macors
+" Plugin Loading
+call plug#begin()
+Plug 'lervag/vimtex'
+Plug 'SirVer/ultisnips'
+Plug 'honza/vim-snippets'
+call plug#end()
 
-" Buffer
-set hidden 							" Hides buffers when abandoned
+" Settings for latexmk
+let g:vimtex_view_general_viewer = 'okular'
+let g:vimtex_view_general_options = '--unique file:@pdf\#src:@line@tex'
+let g:vimtex_view_general_options_latexmk = '--unique'
 
-" Tabs stuff
-set tabstop=8						" Default, just to remind
-set softtabstop=4					" As recommended in :help tabstop
-set shiftwidth=4					" When pressing <tab>
-set expandtab						" Expand <tab> to spaces
+" Backup folder
+set backupdir=~/.vim/tmp
+set directory=~/.vim/tmp
 
+" Vim general stuff
+set ruler           " Show curser position
+set showcmd         " Incomplete command displayed
+set history=50      " Length of history
+set number relativenumber    " Line numbering
+set showmatch       " Jump to matching bracket
+set autoindent      " Automatic indentation
+"set copyindent      " Indentation of previous line
+set textwidth=100   " Number of columns before automatic line break
+"set colorcolumn=100 " Colored column
+set backspace=indent,eol,start "Backspacing beyond starting point of insert mode
+set linebreak       " Linebreak at space instead of space
+set wrapscan        " Search starts again at top hitting bottom
+set incsearch       " highlighting while typed what is searched
+set lazyredraw      " Do not redraw screen when running macros
+set hidden          " Hide buffers when abandoned
 
-"------------------------------------
-"Folding
-"-----------------------------------
+" Tabs
+set tabstop=8       " Default, reminder
+set softtabstop=4   " recommended
+set shiftwidth=4    " When pressing <tab>
+set expandtab       " Expand <tab> to spaces
 
-set foldcolumn=6                    "(fdc) width of fold column (to see where folds are)
-set foldmethod=indent               "(fdm) creates a fold for every level of indentation
-set foldlevel=99                    "(fdl) do not close folds
-set foldenable                      "(fen) enables or disables folding
+" Folding
+"set foldcolumn=6    " Width of fold column
+"set foldmethod=indent   " Fold for every level of indent
+"set foldlevel=99    " Do not close folds
+"set foldenable      " Enable or disable folding
 
-"-----------------------------------
-" backupdirs
-"-----------------------------------
-
-set backupdir=~/.tmp
-set directory=~/.tmp				" temporary dir for smp and tmp files
-
-
-"-----------------------------------
-" Status line
-"-----------------------------------
-
-highlight StatusLine ctermbg=blue
-
-"-----------------------------------
-" File Specific Settings
-"-----------------------------------
-
-au FileType c,h setlocal mps+==:;   "Allow the match pairs operation (%) to work with '=' and ';'
-au FileType c,h setlocal cindent
-
-
-
-"-----------------------------------
-" Abbreviations
-"-----------------------------------
-
-abbreviate #i #include
-abbreviate #d #define
-abbreviate cRWS call RemoveWhiteSpace()
-abbreviate hs vs
-
-"-----------------------------------
+"
 " Key Mappings
-"-----------------------------------
-
+"
 let mapleader = ","
 
 " Moving between split windows more naturally
@@ -94,70 +65,13 @@ map <C-h> <C-W><C-H>
 noremap k gk
 noremap j gj
 
-map <F7> mzgg=G`z
+"command! -nargs=+ Calc :py3 print(<args>)
+"py3 from math import *
 
-"Compile with g++
-"map <F4> :w <CR> :!g++ -o prog main.c functions.c && ./prog <CR>
+" Ultisnips
 
-" Source the current file (useful for vimrc)
-" End highlighting search, unfortunately gives e490 fold error
-map <Leader>so :source %<CR>
-map <Leader>h :nohl<CR>
-
-
-"----------------------------------
-" Functions
-"----------------------------------
-
-"Rename param1 tags to be param2 tags
-function! RenameTag(param1, param2) abort
-	:%s/<\(\/\?\)a:param1\(\_s*\)/<\la:param2\2/gci
-endfunction
-
-"Remove superfluous white space from the end of a line, Defined an abbreviation
-" CRWS to call it
-function! RemoveWhiteSpace() abort
-	:%s/\s*$//g
-	  :'^
-	  "`.
-endfunction
-
-"REmove superfluous white space at save
-au BufWritePre * :%s/\s\+$//e
-
-" Rename Current File
-function! RenameFile() abort
-  let old_name = expand('%')
-  let new_name = input('New file name: ', expand('%'), 'file')
-  if new_name != '' && new_name != old_name
-    exec ':saveas ' . new_name
-    exec ':silent !rm ' . old_name
-    redraw!
-  endif
-endfunction
-map <Leader>n :call RenameFile()<cr>
-
-
-" Finding Files
-set path +=**						" Search down into subfolders
-									" Provides tab-completion for all file-related commands
-set wildmenu						" Tab completion menu
-
-" Tag Jumping:
-" Create the 'tags' file
-command! MakeTags !ctags -R
-
-" Use <C-]> to jump to tag under cursor
-" Use g <C-]> for ambigous tags
-" Use <C-t> to jump back up the tag stack
-
-"Latex mappings:
-" nnoremap ,fr i\frac{}{}<ESC>F{;a
-" nnoremap ,align i\begin{align}<CR>\end{align}<ESC>ko<C-I>
-
-" TODO: Figure out if it is worth it
-"Escape time delay
-"set noesckeys
-"set ttimeout
-"set ttimeoutlen=1
-"imap jj <ESC>
+let g:UltiSnipsExpandTrigger="<tab>"
+let g:UltiSnipsJumpForwardTrigger="<c-b>"
+let g:UltiSnipsJumpBackwardTrigger="<c-z>"
+let g:UltiSnipsSnippetsDir="/home/mairhofer/.vim/snips"
+let g:UltiSnipsSnippetDirectories=["snips", "UltiSnips"]
